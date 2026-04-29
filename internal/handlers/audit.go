@@ -53,11 +53,15 @@ func CreateAuditLog(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated) // HTTP 201 Created
 
-	// Codificamos un mapa directamente a la respuesta
-	json.NewEncoder(w).Encode(map[string]string{
+	// Codificamos un mapa y evaluamos si hubo un error al enviarlo al cliente
+	errEncode := json.NewEncoder(w).Encode(map[string]string{
 		"status": "Evento de auditoría registrado exitosamente",
 		"action": event.Action,
 	})
+
+	if errEncode != nil {
+		fmt.Printf("[ERROR] No se pudo enviar la respuesta JSON al cliente: %v\n", errEncode)
+	}
 
 	// 4. Incrementar el contador de eventos de auditoría
 	auditCounter.Inc()

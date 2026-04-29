@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/YagoGomez83/proyecto2-go-audit/internal/config"
 	"github.com/YagoGomez83/proyecto2-go-audit/internal/handlers"
@@ -36,7 +37,17 @@ func main() {
 	fmt.Printf("Iniciando servidor de auditoría en el puerto %s...\n", puerto)
 
 	// ListenAndServe bloquea el hilo principal y mantiene el servicio vivo
-	err := http.ListenAndServe(puerto, r)
+	// CORRECCIÓN DEVSECOPS: Configuramos un servidor con Timeouts estrictos
+	srv := &http.Server{
+		Addr:         puerto,
+		Handler:      r,
+		ReadTimeout:  5 * time.Second,   // Tiempo máximo para leer la petición (evita Slowloris)
+		WriteTimeout: 10 * time.Second,  // Tiempo máximo para escribir la respuesta
+		IdleTimeout:  120 * time.Second, // Tiempo máximo de conexiones inactivas (Keep-Alive)
+	}
+
+	// Arrancamos el servidor usando nuestro objeto seguro
+	err := srv.ListenAndServe()
 	if err != nil {
 		fmt.Printf("Error fatal al iniciar el servidor: %v\n", err)
 	}
