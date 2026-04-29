@@ -1,0 +1,39 @@
+name: DevSecOps Pipeline
+
+# 1. Triggers: Este pipeline se ejecuta cada vez que haces un "push" a la rama main
+on:
+    push:
+        branches: [ "main" ]
+    pull_request:
+        branches: [ "main" ]
+
+jobs:
+    build-and-scan:
+        # Levantamos un contenedor Ubuntu limpio en los servidores de GitHub
+        runs-on: ubuntu-latest
+
+        steps:
+            # 1. Descargamos tu código fuente al contenedor
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            # 2. Instalamos la versión exacta de Go que usamos en local
+            - name: Set up Go 1.23
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.23"
+
+            # 3. Verificamos que los imports y módulos estén limpios
+            - name: Verify dependencies
+              run: go mod tidy
+
+            # 4. Compilamos el binario (Tal cual lo hicimos en el Dockerfile)
+            - name: Build Binary
+              run: CGO_ENABLED=0 GOOS=linux go build -o audit-api ./cmd/api/main.go
+
+            # 5. MAGIA DEVSECOPS: Ejecutamos GoSec (Go Security Scanner)
+            # Esto leerá tu código buscando vulnerabilidades (ej. secretos hardcodeados, SQL injection, algoritmos criptográficos débiles)
+            - name: Run Security Scan (SAST)
+              uses: securego/gosec@master
+              with:
+                  args: ./...

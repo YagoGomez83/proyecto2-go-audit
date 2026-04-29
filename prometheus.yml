@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 5s # Cada 5 segundos llamará a nuestra API
+
+scrape_configs:
+  - job_name: "go-audit-api"
+    static_configs:
+      # 'app' es el nombre del servicio que le daremos en docker-compose
+      - targets: ["app:8081"]

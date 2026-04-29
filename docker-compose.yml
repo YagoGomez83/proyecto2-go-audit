@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  app:
+    build: . # Usa el Dockerfile Multi-stage que creamos antes
+    ports:
+      - "8081:8081"
+    environment:
+      # Inyectamos la variable de entorno directamente al contenedor
+      - JWT_SECRET=mi-super-secreto-en-docker
+      - PORT=8081
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      # Mapeamos el archivo de configuración hacia adentro del contenedor
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - app # Prometheus espera a que la app levante
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
